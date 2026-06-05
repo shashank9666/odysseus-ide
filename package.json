@@ -1,4 +1,8 @@
 {
+  "name": "odysseus",
+  "version": "1.0.0",
+  "description": "Odysseus IDE",
+  "author": "Odysseus",
   "repository": {
     "type": "git",
     "url": "https://github.com/shashank9666/odysseus-ide.git"
@@ -9,13 +13,34 @@
     "dev": "electron .",
     "electron": "electron .",
     "backend": "venv\\Scripts\\python.exe -m uvicorn app:app --host 127.0.0.1 --port 7000",
-    "test": "venv\\Scripts\\pytest"
+    "test": "venv\\Scripts\\pytest",
+    "electron-build": "electron-builder --win"
   },
   "devDependencies": {
     "@antithesishq/bombadil": "^0.3.2",
-    "electron": "^42.3.3"
+    "electron": "^42.3.3",
+    "electron-builder": "^26.8.1"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0"
+  },
+  "build": {
+    "appId": "com.odysseus.ide",
+    "productName": "Odysseus",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable"
+    },
+    "files": [
+      "**/*",
+      "!venv/**/*",
+      "!node_modules/electron/**/*",
+      "!node_modules/electron-builder/**/*",
+      "!.pytest_cache/**/*",
+      "!tests/**/*",
+      "!logs/**/*"
+    ]
   }
 }

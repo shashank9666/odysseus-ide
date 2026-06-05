@@ -267,6 +267,70 @@ import * as Modals from './modalManager.js';
     });
     _maybeOpenDocFromHash();
     window.addEventListener('hashchange', _maybeOpenDocFromHash);
+
+    // Initialize IDE Toggle Switch (Agent vs Code Editor)
+    (function _initIdeToggle() {
+      const agentBtn = document.getElementById('ide-toggle-agent');
+      const editorBtn = document.getElementById('ide-toggle-editor');
+      
+      if (!agentBtn || !editorBtn) return;
+      
+      const updateToggleUI = () => {
+        const docOpen = document.body.classList.contains('doc-view');
+        if (docOpen) {
+          agentBtn.classList.remove('active');
+          editorBtn.classList.add('active');
+        } else {
+          agentBtn.classList.add('active');
+          editorBtn.classList.remove('active');
+        }
+      };
+
+      // Listen for click on Agent
+      agentBtn.addEventListener('click', () => {
+        if (isOpen) {
+          closePanel();
+        }
+        updateToggleUI();
+      });
+
+      // Listen for click on Code Editor
+      editorBtn.addEventListener('click', () => {
+        if (!isOpen) {
+          const curId = getCurrentDocId();
+          if (curId) {
+            switchToDoc(curId);
+          } else if (docs.size > 0) {
+            const firstId = Array.from(docs.keys())[0];
+            switchToDoc(firstId);
+          } else {
+            openLibrary();
+          }
+        } else {
+          // If already open, let's toggle it to fullscreen
+          const pane = document.getElementById('doc-editor-pane');
+          if (pane && !pane.classList.contains('doc-fullscreen')) {
+            const container = document.getElementById('chat-container');
+            pane.classList.add('doc-fullscreen');
+            if (container) container.style.display = 'none';
+          }
+        }
+        updateToggleUI();
+      });
+
+      // Sync toggle UI when document view state changes
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.attributeName === 'class') {
+            updateToggleUI();
+          }
+        }
+      });
+      observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+      // Run initial sync
+      updateToggleUI();
+    })();
   }
 
   /** Update overflow-doc-btn accent indicator, toolbar indicator, and session list icon */
@@ -5028,7 +5092,7 @@ import * as Modals from './modalManager.js';
           e.stopPropagation();
           clearSelection();
         }
-    }
+      });
 
     // Initialize Monaco Editor and bind it to our compatibility bridge
     _ensureMonaco().then(() => {

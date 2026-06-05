@@ -83,6 +83,10 @@ body, button, select, input, textarea {
 
 /* --- 5. Message List & Chat History Layout --- */
 .chat-history {
+  max-width: 900px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
   padding: 24px 24px 12px 24px !important;
   display: flex !important;
   flex-direction: column !important;
@@ -90,9 +94,13 @@ body, button, select, input, textarea {
 }
 
 .msg {
-  max-width: 80% !important;
+  max-width: 85% !important;
   margin-bottom: 0 !important;
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 @keyframes fadeInUp {
@@ -118,8 +126,6 @@ body, button, select, input, textarea {
 /* User Message: Indigo gradient capsule */
 .msg-user {
   align-self: flex-end !important;
-}
-.msg-user .body {
   background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
   color: #ffffff !important;
   border-radius: 18px 18px 2px 18px !important;
@@ -129,12 +135,17 @@ body, button, select, input, textarea {
   font-size: 13.5px !important;
   line-height: 1.6 !important;
 }
+.msg-user .body {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 
 /* AI Message: Premium card with glow effect */
 .msg-ai {
   align-self: flex-start !important;
-}
-.msg-ai .body {
   background: rgba(30, 30, 36, 0.45) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -145,6 +156,13 @@ body, button, select, input, textarea {
   font-size: 13.5px !important;
   line-height: 1.6 !important;
   position: relative !important;
+}
+.msg-ai .body {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Accent indicator for AI messages */
@@ -177,10 +195,13 @@ body, button, select, input, textarea {
   -webkit-backdrop-filter: blur(24px) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 16px !important;
-  margin: 12px 24px 24px !important;
+  max-width: 900px !important;
+  width: calc(100% - 48px) !important;
+  margin: 12px auto 24px !important;
   padding: 14px !important;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
   transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+  box-sizing: border-box !important;
 }
 
 .chat-input-bar:focus-within {
@@ -236,4 +257,59 @@ body, button, select, input, textarea {
   backdrop-filter: blur(16px) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   padding: 10px 24px !important;
+}
+
+/* --- 8. IDE Switching Pill Toggle --- */
+.ide-toggle-container {
+  position: fixed;
+  top: 10px;
+  left: 296px; /* Expanded sidebar state: 48px rail + 240px sidebar + spacing */
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(22, 22, 29, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.sidebar-collapsed .ide-toggle-container {
+  left: 56px; /* Collapsed sidebar state: 48px rail + spacing */
+}
+
+@media (max-width: 768px) {
+  .ide-toggle-container {
+    display: none !important;
+  }
+}
+
+.ide-toggle-btn {
+  background: transparent;
+  border: none;
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ide-toggle-btn:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ide-toggle-btn.active {
+  color: #ffffff !important;
+  background: var(--brand-color, var(--red)) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
