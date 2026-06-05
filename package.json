@@ -3,8 +3,13 @@
     "type": "git",
     "url": "https://github.com/shashank9666/odysseus-ide.git"
   },
+  "main": "electron-main.js",
+  "scripts": {
+    "electron": "electron ."
+  },
   "devDependencies": {
-    "@antithesishq/bombadil": "^0.3.2"
+    "@antithesishq/bombadil": "^0.3.2",
+    "electron": "^42.3.3"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0"
