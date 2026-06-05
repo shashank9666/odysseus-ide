@@ -214,12 +214,32 @@
     })();
   </script>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/custom.css">
   <link rel="modulepreload" href="/static/app.js">
   <link rel="modulepreload" href="/static/js/chat.js">
   <link rel="modulepreload" href="/static/js/ui.js">
   <link rel="modulepreload" href="/static/js/sessions.js">
   <link rel="modulepreload" href="/static/js/markdown.js">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover" />
+  <script src="https://cdn.tailwindcss.com" nonce="{{CSP_NONCE}}"></script>
+  <script nonce="{{CSP_NONCE}}">
+    tailwind.config = {
+      corePlugins: {
+        preflight: false
+      },
+      theme: {
+        extend: {
+          colors: {
+            brand: 'var(--brand-color, #e06c75)',
+            panel: 'var(--panel, #1e1e24)',
+            bg: 'var(--bg, #0e0e12)',
+            border: 'var(--border, #2e2e38)',
+            fg: 'var(--fg, #abb2bf)'
+          }
+        }
+      }
+    }
+  </script>
 </head>
 <body>
   <!-- Loading overlay — hides all flashing until app is ready -->
@@ -935,7 +955,28 @@
       <div class="welcome-name"><svg class="welcome-boat" viewBox="0 0 32 32"><path d="M16 4L16 22L6 22Z" fill="currentColor"/><path d="M16 8L16 22L24 22Z" fill="currentColor" opacity="0.6"/><path d="M4 24Q10 20 16 24Q22 28 28 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>Odysseus</div>
       <div class="welcome-sub" id="welcome-sub">Welcome, <span class="setup-trigger-link" style="color:var(--accent,var(--red));font-weight:600;cursor:pointer;text-decoration:underline;" title="Click to launch setup">type /setup</span> to get started.</div>
       <div class="welcome-tip" id="welcome-tip"></div>
-      <button type="button" class="incognito-btn" id="incognito-btn" title="Enable Nobody mode — no memory, no history saved">
+      
+      <!-- suggestion cards grid -->
+      <div class="welcome-grid grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mt-6 w-full px-4 text-left">
+        <div class="welcome-card p-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] hover:border-indigo-500/30 rounded-xl transition duration-200 cursor-pointer backdrop-blur" data-suggestion="/setup">
+          <div class="font-bold text-white text-sm mb-1 flex items-center gap-2">🛠️ <span>Initial Setup</span></div>
+          <div class="text-[11px] text-gray-400 leading-normal">Configure local models or APIs. Click to type <code>/setup</code>.</div>
+        </div>
+        <div class="welcome-card p-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] hover:border-rose-500/30 rounded-xl transition duration-200 cursor-pointer backdrop-blur" data-suggestion="/theme">
+          <div class="font-bold text-white text-sm mb-1 flex items-center gap-2">🎨 <span>Theme Personalization</span></div>
+          <div class="text-[11px] text-gray-400 leading-normal">Custom colors, toggling animations & fonts. Click to type <code>/theme</code>.</div>
+        </div>
+        <div class="welcome-card p-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] hover:border-amber-500/30 rounded-xl transition duration-200 cursor-pointer backdrop-blur" data-suggestion="@web ">
+          <div class="font-bold text-white text-sm mb-1 flex items-center gap-2">🔍 <span>Web Search</span></div>
+          <div class="text-[11px] text-gray-400 leading-normal">Query the web for real-time references. Click to type <code>@web</code>.</div>
+        </div>
+        <div class="welcome-card p-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] hover:border-green-500/30 rounded-xl transition duration-200 cursor-pointer backdrop-blur" data-suggestion="@shell ">
+          <div class="font-bold text-white text-sm mb-1 flex items-center gap-2">💻 <span>Shell Command</span></div>
+          <div class="text-[11px] text-gray-400 leading-normal">Execute code, run builds, and run tests. Click to type <code>@shell</code>.</div>
+        </div>
+      </div>
+      
+      <button type="button" class="incognito-btn mt-4" id="incognito-btn" title="Enable Nobody mode — no memory, no history saved">
         <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
         </svg>
@@ -945,6 +986,33 @@
         <span class="incognito-label">Nobody</span>
       </button>
       <div id="welcome-setup" style="display:none"></div>
+      
+      <!-- Script block for welcome suggestion cards click handling -->
+      <script nonce="{{CSP_NONCE}}">
+        (function() {
+          var setupLink = document.querySelector('.setup-trigger-link');
+          if (setupLink) {
+            setupLink.addEventListener('click', function() {
+              var msg = document.getElementById('message');
+              if (msg) {
+                msg.value = '/setup';
+                msg.focus();
+                msg.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            });
+          }
+          document.querySelectorAll('.welcome-card[data-suggestion]').forEach(function(card) {
+            card.addEventListener('click', function() {
+              var msg = document.getElementById('message');
+              if (msg) {
+                msg.value = card.getAttribute('data-suggestion');
+                msg.focus();
+                msg.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            });
+          });
+        })();
+      </script>
     </div>
     <script nonce="{{CSP_NONCE}}">
     (function(){

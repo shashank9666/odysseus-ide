@@ -1,0 +1,239 @@
+/* ======================================================== */
+/* Odysseus Modern UI Redesign Overrides                   */
+/* ======================================================== */
+
+/* --- 1. Global Typography & Base Improvements --- */
+body, button, select, input, textarea {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- 2. Glassmorphic Sidebar & Rail --- */
+.sidebar {
+  background: color-mix(in srgb, var(--panel) 70%, transparent) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.icon-rail {
+  background: color-mix(in srgb, var(--panel) 80%, transparent) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.sidebar-user-bar {
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+.sidebar-brand-title {
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* --- 3. Sleek Scrollbars --- */
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 99px !important;
+  border: none !important;
+  transition: background 0.2s !important;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-color, var(--red)) !important;
+}
+
+/* --- 4. Premium Cards & Lists in Sidebar --- */
+.sidebar-inner .list-item,
+#session-list [role="option"] {
+  border-radius: 8px !important;
+  margin: 3px 6px !important;
+  padding: 8px 12px !important;
+  border: 1px solid transparent !important;
+  background: transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.sidebar-inner .list-item:hover,
+#session-list [role="option"]:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  transform: translateX(2px);
+}
+
+/* Active sidebar item states */
+.sidebar-inner .list-item.active,
+.sidebar-inner .list-item.active-section,
+#session-list [role="option"].active,
+#session-list [role="option"][aria-selected="true"] {
+  background: color-mix(in srgb, var(--brand-color, var(--red)) 12%, rgba(255, 255, 255, 0.01)) !important;
+  border-color: color-mix(in srgb, var(--brand-color, var(--red)) 25%, transparent) !important;
+  color: var(--brand-color, var(--red)) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  font-weight: 500 !important;
+}
+
+/* --- 5. Message List & Chat History Layout --- */
+.chat-history {
+  padding: 24px 24px 12px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 24px !important;
+}
+
+.msg {
+  max-width: 80% !important;
+  margin-bottom: 0 !important;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.msg .role {
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  opacity: 0.6 !important;
+  margin-bottom: 6px !important;
+  font-weight: 600 !important;
+}
+
+/* User Message: Indigo gradient capsule */
+.msg-user {
+  align-self: flex-end !important;
+}
+.msg-user .body {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  color: #ffffff !important;
+  border-radius: 18px 18px 2px 18px !important;
+  padding: 12px 18px !important;
+  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3) !important;
+  border: none !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+}
+
+/* AI Message: Premium card with glow effect */
+.msg-ai {
+  align-self: flex-start !important;
+}
+.msg-ai .body {
+  background: rgba(30, 30, 36, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 18px 18px 18px 2px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  position: relative !important;
+}
+
+/* Accent indicator for AI messages */
+.msg-ai::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 3px;
+  background: var(--brand-color, var(--red));
+  border-radius: 0 4px 4px 0;
+  opacity: 0.7;
+}
+
+/* Code block adjustments inside bubbles */
+.msg .body pre {
+  background: rgba(15, 15, 20, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 10px !important;
+  padding: 14px 18px !important;
+  margin: 12px 0 !important;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* --- 6. Floating Glassmorphic Input Island --- */
+.chat-input-bar {
+  background: rgba(22, 22, 29, 0.8) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  margin: 12px 24px 24px !important;
+  padding: 14px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.chat-input-bar:focus-within {
+  border-color: var(--brand-color, var(--red)) !important;
+  box-shadow: 0 0 0 1px var(--brand-color, var(--red)), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+}
+
+.chat-input-top textarea {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: var(--fg) !important;
+  padding: 4px !important;
+}
+
+/* Button & mode pill styling */
+.mode-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 99px !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  padding: 2px !important;
+}
+
+.mode-toggle-btn {
+  border-radius: 99px !important;
+  padding: 4px 12px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+.send-btn {
+  border-radius: 99px !important;
+  padding: 6px 16px !important;
+  background: var(--brand-color, var(--red)) !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(224, 108, 117, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.send-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(224, 108, 117, 0.35) !important;
+}
+
+/* --- 7. Top Bar Navigation --- */
+.chat-top-bar {
+  background: color-mix(in srgb, var(--bg) 85%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 10px 24px !important;
+}

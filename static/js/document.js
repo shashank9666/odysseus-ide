@@ -113,6 +113,118 @@ import * as Modals from './modalManager.js';
   let _lastSessionId = '';          // session context for "+" button
   const docs = new Map();           // docId -> { id, title, language, content, version, sessionId }
 
+  let _monacoLoadingPromise = null;
+
+  function getMonacoLanguage(lang) {
+    if (!lang) return 'plaintext';
+    lang = lang.toLowerCase();
+    const map = {
+      'js': 'javascript',
+      'ts': 'typescript',
+      'bash': 'shell',
+      'sh': 'shell',
+      'yml': 'yaml',
+      'text': 'plaintext',
+      'txt': 'plaintext'
+    };
+    return map[lang] || lang;
+  }
+
+  function _ensureMonaco() {
+    if (_monacoLoadingPromise) return _monacoLoadingPromise;
+    _monacoLoadingPromise = new Promise((resolve) => {
+      if (window.monaco) {
+        resolve();
+        return;
+      }
+      if (!window.require) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs/loader.js';
+        script.onload = () => {
+          require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs' } });
+          require(['vs/editor/editor.main'], () => {
+            _setupMonacoTheme();
+            resolve();
+          });
+        };
+        document.head.appendChild(script);
+      } else {
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs' } });
+        require(['vs/editor/editor.main'], () => {
+          _setupMonacoTheme();
+          resolve();
+        });
+      }
+    });
+    return _monacoLoadingPromise;
+  }
+
+  function _setupMonacoTheme() {
+    const style = getComputedStyle(document.documentElement);
+    const panel = style.getPropertyValue('--panel').trim() || '#1e1e24';
+    const fg = style.getPropertyValue('--fg').trim() || '#abb2bf';
+    const border = style.getPropertyValue('--border').trim() || '#2e2e38';
+    const brand = style.getPropertyValue('--brand-color').trim() || style.getPropertyValue('--red').trim() || '#e06c75';
+
+    monaco.editor.defineTheme('odysseus-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'comment', foreground: '828997', fontStyle: 'italic' },
+        { token: 'keyword', foreground: brand.replace('#', '') },
+        { token: 'string', foreground: 'e5c07b' },
+        { token: 'number', foreground: 'd19a66' },
+        { token: 'regexp', foreground: 'e5c07b' },
+        { token: 'type', foreground: '56b6c2' },
+        { token: 'class', foreground: '61afef' },
+        { token: 'function', foreground: '61afef' },
+        { token: 'variable', foreground: 'abb2bf' },
+      ],
+      colors: {
+        'editor.background': panel,
+        'editor.foreground': fg,
+        'editor.lineHighlightBackground': '#2c313c',
+        'editorLineNumber.foreground': '#4b5263',
+        'editorLineNumber.activeForeground': fg,
+        'editor.selectionBackground': '#3e4451',
+        'editor.inactiveSelectionBackground': '#3a3f4b',
+        'editorWidget.background': panel,
+        'editorWidget.border': border,
+      }
+    });
+  }
+
+  function _hookTextarea(ta) {
+    if (ta._monacoHooked) return;
+    ta._monacoHooked = true;
+
+    const desc = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+
+    Object.defineProperty(ta, 'value', {
+      configurable: true,
+      get() {
+        if (window.monacoEditor) {
+          return window.monacoEditor.getValue();
+        }
+        return desc.get.call(ta);
+      },
+      set(val) {
+        desc.set.call(ta, val);
+        if (window.monacoEditor) {
+          if (window.monacoEditor.getValue() !== val) {
+            window.monacoEditor.setValue(val);
+          }
+        }
+      }
+    });
+
+    ta.focus = function() {
+      if (window.monacoEditor) {
+        window.monacoEditor.focus();
+      }
+    };
+  }
+
   const _docOpenKey = (sessionId) => 'odysseus-doc-open-' + sessionId;
   const _docMinimizedKey = (sessionId) => 'odysseus-doc-minimized-' + sessionId;
 
@@ -3922,10 +4034,12 @@ import * as Modals from './modalManager.js';
         <button id="doc-find-next" class="doc-find-nav" title="Next">&darr;</button>
         <button id="doc-find-close" class="doc-find-close" title="Close">&times;</button>
       </div>
-      <div id="doc-editor-wrap" class="doc-editor-wrap">
-        <div id="doc-line-numbers" class="doc-line-numbers">1</div>
-        <pre id="doc-editor-highlight" class="doc-editor-highlight"><code id="doc-editor-code"></code></pre>
-        <textarea id="doc-editor-textarea" class="doc-editor-textarea" placeholder="Document content..." spellcheck="false"></textarea>
+      <div id="doc-editor-wrap" class="doc-editor-wrap" style="position:relative; width:100%; height:100%; min-height:0; flex:1;">
+        <div id="monaco-editor-container" style="width:100%; height:100%; position:absolute; inset:0;"></div>
+        <div id="monaco-diff-container" style="width:100%; height:100%; position:absolute; inset:0; display:none;"></div>
+        <textarea id="doc-editor-textarea" class="doc-editor-textarea" style="display:none;"></textarea>
+        <div id="doc-line-numbers" style="display:none;"></div>
+        <pre id="doc-editor-highlight" style="display:none;"><code id="doc-editor-code"></code></pre>
       </div>
       <!-- WYSIWYG email body. In email mode this replaces the source editor:
            B/I/S act on the live text (execCommand), and on send its HTML becomes
@@ -4914,8 +5028,68 @@ import * as Modals from './modalManager.js';
           e.stopPropagation();
           clearSelection();
         }
-      });
     }
+
+    // Initialize Monaco Editor and bind it to our compatibility bridge
+    _ensureMonaco().then(() => {
+      const container = document.getElementById('monaco-editor-container');
+      const ta = document.getElementById('doc-editor-textarea');
+      if (container && ta && !window.monacoEditor) {
+        _hookTextarea(ta);
+        
+        window.monacoEditor = monaco.editor.create(container, {
+          value: ta.value || '',
+          language: getMonacoLanguage(document.getElementById('doc-language-select')?.value),
+          theme: 'odysseus-dark',
+          automaticLayout: true,
+          minimap: { enabled: true },
+          fontSize: 13,
+          fontFamily: "'Fira Code', Menlo, Monaco, Consolas, monospace",
+          lineHeight: 20,
+          scrollbar: {
+            vertical: 'visible',
+            horizontal: 'visible',
+            verticalScrollbarSize: 8,
+            horizontalScrollbarSize: 8
+          }
+        });
+
+        // Sync value from Monaco to textarea
+        window.monacoEditor.onDidChangeModelContent(() => {
+          const val = window.monacoEditor.getValue();
+          if (ta.value !== val) {
+            const desc = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+            desc.set.call(ta, val);
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+
+        // Sync cursor selection back to textarea selection properties
+        window.monacoEditor.onDidChangeCursorSelection((e) => {
+          const model = window.monacoEditor.getModel();
+          const startOffset = model.getOffsetAt(e.selection.getStartPosition());
+          const endOffset = model.getOffsetAt(e.selection.getEndPosition());
+          ta.selectionStart = startOffset;
+          ta.selectionEnd = endOffset;
+        });
+
+        // Re-run population for the current active doc if it was set before monaco loaded
+        if (activeDocId && docs.has(activeDocId)) {
+          const doc = docs.get(activeDocId);
+          window.monacoEditor.setValue(doc.current_content || doc.content || '');
+          const lang = getMonacoLanguage(doc.language);
+          monaco.editor.setModelLanguage(window.monacoEditor.getModel(), lang);
+        }
+
+        // Keep language updated when document selector changes
+        document.getElementById('doc-language-select')?.addEventListener('change', (e) => {
+          if (window.monacoEditor) {
+            const lang = getMonacoLanguage(e.target.value);
+            monaco.editor.setModelLanguage(window.monacoEditor.getModel(), lang);
+          }
+        });
+      }
+    });
 
     renderTabs();
 
@@ -6283,6 +6457,7 @@ import * as Modals from './modalManager.js';
 
   /** Sync highlighted overlay with textarea content */
   function syncHighlighting() {
+    if (window.monacoEditor) return;
     const textarea = document.getElementById('doc-editor-textarea');
     const codeEl = document.getElementById('doc-editor-code');
     const pre = document.getElementById('doc-editor-highlight');
@@ -7328,9 +7503,42 @@ import * as Modals from './modalManager.js';
     const wrap = document.getElementById('doc-editor-wrap');
     if (wrap) wrap.classList.add('diff-mode');
 
-    _renderDiffOverlay(entries);
+    // If Monaco Editor is available, render side-by-side Monaco Diff Editor
+    if (window.monaco) {
+      const editorContainer = document.getElementById('monaco-editor-container');
+      const diffContainer = document.getElementById('monaco-diff-container');
+      if (editorContainer && diffContainer) {
+        editorContainer.style.display = 'none';
+        diffContainer.style.display = 'block';
+
+        if (window.monacoDiffEditor) {
+          window.monacoDiffEditor.dispose();
+        }
+
+        window.monacoDiffEditor = monaco.editor.createDiffEditor(diffContainer, {
+          theme: 'odysseus-dark',
+          automaticLayout: true,
+          readOnly: true,
+          fontSize: 13,
+          fontFamily: "'Fira Code', Menlo, Monaco, Consolas, monospace",
+          originalEditable: false
+        });
+
+        const lang = document.getElementById('doc-language-select')?.value || 'plaintext';
+        const originalModel = monaco.editor.createModel(oldContent, getMonacoLanguage(lang));
+        const modifiedModel = monaco.editor.createModel(newContent, getMonacoLanguage(lang));
+
+        window.monacoDiffEditor.setModel({
+          original: originalModel,
+          modified: modifiedModel
+        });
+      }
+    } else {
+      _renderDiffOverlay(entries);
+      _renderDiffGutter();
+    }
+
     _renderDiffToolbar();
-    _renderDiffGutter();
 
     // Update header button
     const diffBtn = document.getElementById('doc-diff-toggle-btn');
@@ -7575,6 +7783,24 @@ import * as Modals from './modalManager.js';
     const codeEl = document.getElementById('doc-editor-code');
     const wrap = document.getElementById('doc-editor-wrap');
     if (wrap) wrap.classList.remove('diff-mode');
+
+    // Restore standard Monaco Editor container if Monaco was active
+    if (window.monacoDiffEditor) {
+      const editorContainer = document.getElementById('monaco-editor-container');
+      const diffContainer = document.getElementById('monaco-diff-container');
+      if (editorContainer && diffContainer) {
+        editorContainer.style.display = 'block';
+        diffContainer.style.display = 'none';
+      }
+      
+      const models = window.monacoDiffEditor.getModel();
+      window.monacoDiffEditor.dispose();
+      window.monacoDiffEditor = null;
+      if (models) {
+        if (models.original) models.original.dispose();
+        if (models.modified) models.modified.dispose();
+      }
+    }
 
     if (discard) {
       // Reject all — restore original content

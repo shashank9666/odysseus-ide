@@ -5,7 +5,11 @@
   },
   "main": "electron-main.js",
   "scripts": {
-    "electron": "electron ."
+    "start": "electron .",
+    "dev": "electron .",
+    "electron": "electron .",
+    "backend": "venv\\Scripts\\python.exe -m uvicorn app:app --host 127.0.0.1 --port 7000",
+    "test": "venv\\Scripts\\pytest"
   },
   "devDependencies": {
     "@antithesishq/bombadil": "^0.3.2",
